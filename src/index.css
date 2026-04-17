@@ -1,7 +1,7 @@
-@import "tailwindcss";
-@import "tw-animate-css";
-@import "shadcn/tailwind.css";
-@import "@fontsource-variable/geist";
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+@import '@fontsource-variable/geist';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -71,7 +71,7 @@
     --secondary: 40 20% 90%; /* Muted sand / beige */
     --secondary-foreground: 25 20% 30%; /* Deep brown/sand text */
     --muted: 40 20% 92%;
-    --muted-foreground: 25 15% 45%; 
+    --muted-foreground: 25 15% 45%;
     --accent: 30 50% 94%; /* Soft Peach accent */
     --accent-foreground: 25 85% 35%; /* Darker terracotta text */
     --destructive: 0 84% 60%;
@@ -79,7 +79,7 @@
     --border: 40 15% 85%;
     --input: 40 15% 85%;
     --ring: 25 85% 57%; /* Match primary */
-    --radius: 0.75rem; 
+    --radius: 0.75rem;
   }
 
   .dark {
@@ -95,7 +95,7 @@
     --secondary-foreground: 40 33% 90%;
     --muted: 20 10% 20%;
     --muted-foreground: 40 15% 65%;
-    --accent: 25 30% 20%; 
+    --accent: 25 30% 20%;
     --accent-foreground: 40 33% 90%;
     --destructive: 0 62% 30%;
     --destructive-foreground: 0 0% 98%;
