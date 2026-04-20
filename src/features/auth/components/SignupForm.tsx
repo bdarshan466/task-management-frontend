@@ -32,6 +32,8 @@ export default function SignupForm() {
     password: '',
   });
 
+  const [error, setError] = useState<string | null>(null);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // API Call goes here
@@ -47,6 +49,8 @@ export default function SignupForm() {
     // if user signup successfully then nevigate it to login page
     if (response.success) {
       navigate('/login');
+    } else {
+      setError(`Something went wrong`)
     }
   };
 
@@ -58,6 +62,11 @@ export default function SignupForm() {
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
+          {error && (
+            <div className="p-3 text-sm text-destructive bg-muted border border-border rounded-md font-medium">
+              {error}
+            </div>
+          )}  
           <div className="space-y-2">
             <Label htmlFor="name">Full Name</Label>
             <Input

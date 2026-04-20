@@ -12,7 +12,8 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { KeyRound } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link , useNavigate} from 'react-router-dom';
+import { forgotPasswordApi } from '@/services/authApi';
 
 export default function ForgotPasswordForm() {
   const [email, setEmail] = useState('');
@@ -20,7 +21,9 @@ export default function ForgotPasswordForm() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const navigate = useNavigate();
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
@@ -32,6 +35,14 @@ export default function ForgotPasswordForm() {
     if (newPassword.length < 6) {
       setError('Password must be at least 6 characters long');
       return;
+    }
+
+    const data = await forgotPasswordApi(email, newPassword); 
+
+    if(data.success){
+      navigate('/login')
+    } else {
+      setError(data.message)
     }
 
     // API Call goes here
@@ -93,6 +104,7 @@ export default function ForgotPasswordForm() {
           <Button
             type="submit"
             className="w-full font-medium h-11 transition-transform active:scale-[0.98]"
+            disabled={newPassword.length < 6 || confirmPassword.length < 6 || email.length < 1}
           >
             <KeyRound className="mr-2 h-4 w-4" /> Reset Password
           </Button>

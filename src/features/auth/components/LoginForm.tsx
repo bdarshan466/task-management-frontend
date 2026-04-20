@@ -20,21 +20,26 @@ export default function LoginForm() {
     email: '',
     password: '',
   });
+  const [error, setError] = useState<string | null>(null);
 
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError(null);
     const response = await loginApi(formData.email, formData.password);
     console.log(response);
 
     // on success of the apicall nevigate to dashboard page
     if (response.success) {
       navigate('/dashboard');
+    } else {
+      setError(response.message || 'Something went wrong');
     }
     // store the tokens in local storage
     localStorage.setItem('accessToken', response.data.auth.accessToken);
     localStorage.setItem('refreshToken', response.data.auth.refreshToken);
+    localStorage.setItem('loggedInUserName', response.data.user.name);
   };
 
   return (
@@ -45,6 +50,13 @@ export default function LoginForm() {
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
+
+          {error && (
+            <div className="p-3 text-sm text-destructive bg-muted border border-border rounded-md font-medium">
+              {error}
+            </div>
+          )}
+
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input

@@ -1,37 +1,35 @@
-const backendUrl = import.meta.env.VITE_BACKEND_URL;
+import { apiClient } from '@/lib/apiClient';
 
 const loginApi = async (email: string, password: string) => {
   try {
-    const response = await fetch(`${backendUrl}/user/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password }),
-    });
-    const data = await response.json();
+    const data = await apiClient.post('/user/login', { email, password });
     console.log('data ===>', data);
     return data;
   } catch (error: any) {
     console.error(error);
+    // Return structured error if available directly from Axios payload
+    return error.response?.data || { success: false, message: 'Login failed' };
   }
 };
 
 const signUpApi = async (name: string, email: string, role: string, password: string) => {
   try {
-    const response = await fetch(`${backendUrl}/user/register`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ name, email, role, password }),
-    });
-    const data = await response.json();
-    console.log('data ===>', data);
+    const data = await apiClient.post('/user/register', { name, email, role, password });
     return data;
   } catch (error: any) {
     console.error(error);
+    return error.response?.data || { success: false, message: 'Signup failed' };
   }
 };
 
-export { loginApi, signUpApi };
+const forgotPasswordApi = async (email: string, newPassword: string) => {
+  try {
+    const data = await apiClient.post('/user/forgot-password', { email, newPassword });
+    return data;
+  } catch (error: any) {
+    console.error(error);
+    return error.response?.data || { success: false, message: 'Password reset failed' };
+  }
+};
+
+export { loginApi, signUpApi, forgotPasswordApi };

@@ -2,7 +2,8 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import LoginPage from './pages/auth/LoginPage';
 import SignupPage from './pages/auth/SignupPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
-import DashboardPage from './pages/auth/DashboardPage';
+import DashboardPage from './pages/dashboard/DashboardPage';
+import TeamsPage from './pages/dashboard/TeamsPage';
 
 function App() {
   return (
@@ -13,6 +14,7 @@ function App() {
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/dashboard/teams" element={<TeamsPage />} />
       </Routes>
     </Router>
   );
