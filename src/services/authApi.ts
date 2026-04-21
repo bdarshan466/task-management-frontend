@@ -3,11 +3,9 @@ import { apiClient } from '@/lib/apiClient';
 const loginApi = async (email: string, password: string) => {
   try {
     const data = await apiClient.post('/user/login', { email, password });
-    console.log('data ===>', data);
     return data;
   } catch (error: any) {
     console.error(error);
-    // Return structured error if available directly from Axios payload
     return error.response?.data || { success: false, message: 'Login failed' };
   }
 };
@@ -32,4 +30,4 @@ const forgotPasswordApi = async (email: string, newPassword: string) => {
   }
 };
 
-export { loginApi, signUpApi, forgotPasswordApi };
+export default { loginApi, signUpApi, forgotPasswordApi };

@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/select';
 import { UserPlus } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { signUpApi } from '@/services/authApi';
+import AuthService from '@/services/authApi';
 
 export default function SignupForm() {
   const navigate = useNavigate();
@@ -39,7 +39,7 @@ export default function SignupForm() {
     // API Call goes here
     console.log('Signup logic triggered');
 
-    const response = await signUpApi(
+    const response = await AuthService.signUpApi(
       signUpFormData.name,
       signUpFormData.email,
       signUpFormData.role,

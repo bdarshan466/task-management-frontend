@@ -1,12 +1,12 @@
 export interface Team {
-  id: string;
+  teamID: string;
   name: string;
   members: number;
   owner: string;
+  ownerUserID: string;
 }
 
 export interface User {
-  id: string;
+  userID: string;
   name: string;
-  color: string;
 }

@@ -22,7 +22,7 @@ export default function EditTeamModal({ team, onClose, onSave }: Props) {
 
   const handleUpdate = () => {
     if (name.trim()) {
-      onSave(team.id, name.trim());
+      onSave(team.teamID, name.trim());
     }
   };
 

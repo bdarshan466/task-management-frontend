@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/card';
 import { KeyRound } from 'lucide-react';
 import { Link , useNavigate} from 'react-router-dom';
-import { forgotPasswordApi } from '@/services/authApi';
+import AuthService from '@/services/authApi';
 
 export default function ForgotPasswordForm() {
   const [email, setEmail] = useState('');
@@ -37,7 +37,7 @@ export default function ForgotPasswordForm() {
       return;
     }
 
-    const data = await forgotPasswordApi(email, newPassword); 
+    const data = await AuthService.forgotPasswordApi(email, newPassword); 
 
     if(data.success){
       navigate('/login')

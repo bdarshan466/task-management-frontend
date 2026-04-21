@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/card';
 import { LogIn } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { loginApi } from '@/services/authApi';
+import AuthService from '@/services/authApi';
 
 export default function LoginForm() {
   const [formData, setFormData] = useState({
@@ -27,7 +27,7 @@ export default function LoginForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
-    const response = await loginApi(formData.email, formData.password);
+    const response = await AuthService.loginApi(formData.email, formData.password);
     console.log(response);
 
     // on success of the apicall nevigate to dashboard page
@@ -40,6 +40,7 @@ export default function LoginForm() {
     localStorage.setItem('accessToken', response.data.auth.accessToken);
     localStorage.setItem('refreshToken', response.data.auth.refreshToken);
     localStorage.setItem('loggedInUserName', response.data.user.name);
+    localStorage.setItem("loggedInUserID", response.data.user.userID);
   };
 
   return (
