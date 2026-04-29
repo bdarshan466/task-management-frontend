@@ -28,13 +28,12 @@ export default function LoginForm() {
     e.preventDefault();
     setError(null);
     const response = await AuthService.loginApi(formData.email, formData.password);
-    console.log(response);
 
     // on success of the apicall nevigate to dashboard page
     if (response.success) {
-      navigate('/dashboard');
+      navigate('/dashboard', {state: {message: {text: 'Login successful', type: 'success'}}});
     } else {
-      setError(response.message || 'Something went wrong');
+      handleError(response.message || 'Something went wrong');
     }
     // store the tokens in local storage
     localStorage.setItem('accessToken', response.data.auth.accessToken);
@@ -42,6 +41,15 @@ export default function LoginForm() {
     localStorage.setItem('loggedInUserName', response.data.user.name);
     localStorage.setItem("loggedInUserID", response.data.user.userID);
   };
+
+  const handleError = (message: string) => {
+  setError(message);
+
+  // Clear error after 5 seconds
+  setTimeout(() => {
+    setError(null);
+  }, 5000);
+};
 
   return (
     <Card className="border-none shadow-none md:border md:shadow-sm">

@@ -20,6 +20,16 @@ const updateTeamApi = async (teamID: string, name: string) => {
   }
 };
 
+const deleteTeamApi = async (teamID: string) => {
+  try {
+    const data = await apiClient.delete(`/team/${teamID}`);
+    return data;
+  } catch (error: any) {
+    console.error(error);
+    return error.response?.data || { success: false, message: 'Delete Team Failed' };
+  }
+};
+
 const addMemberApi = async (teamID: string, userID: string, role: string) => {
   try {
     const data = await apiClient.post(`/team/assign`, {teamID, userID, role});
@@ -30,4 +40,15 @@ const addMemberApi = async (teamID: string, userID: string, role: string) => {
   }
 };
 
-export default { addTeamApi, updateTeamApi, addMemberApi };
+const getListTeamsApi = async () => {
+  try {
+    const data = await apiClient.get(`/team/list`);
+    console.log("List of teams in teamApi: ", data);
+    return data;
+  } catch (error: any) {
+    console.error(error);
+    return error.response?.data || { success: false, message: 'Get List Teams Failed' };
+  }
+};
+
+export default { addTeamApi, updateTeamApi, addMemberApi, deleteTeamApi, getListTeamsApi };
