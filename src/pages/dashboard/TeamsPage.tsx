@@ -99,9 +99,9 @@ useEffect(()=> {
     }
   };
 
-  const handleAddTeam = async (name: string) => {
+  const handleAddTeam = async (name: string, codePrefix: string) => {
       try {
-        const response = await TeamService.addTeamApi(name);
+        const response = await TeamService.addTeamApi(name, codePrefix);
 
         if(response.success === false){
           setToastMessage({ text: response.message || "Failed to add team", type: 'error' });
@@ -113,8 +113,8 @@ useEffect(()=> {
           teamID: response.data.teamID, 
           name: response.data.name, 
           members: response.data.members || 1,
-          owner: localStorage.getItem("loggedInUserName"),
-          ownerUserID: localStorage.getItem("loggedInUserID")
+          owner: localStorage.getItem("loggedInUserName") || "",
+          ownerUserID: localStorage.getItem("loggedInUserID") || ""
         }
         setTeamsData([newTeam, ...teamsData]);
         setIsAddTeamOpen(false);
@@ -182,7 +182,7 @@ useEffect(()=> {
               <tbody className="divide-y divide-zinc-100">
                 {currentTeams.map((team, index) => {
                   const displayIndex = startIndex + index + 1;
-                  
+                  const isOwner = team.ownerUserID === localStorage.getItem("loggedInUserID");
                   return (
                     <tr key={team.teamID} className="hover:bg-zinc-50 transition-colors">
                       <td className="px-6 py-4 font-medium text-zinc-400">
@@ -200,27 +200,36 @@ useEffect(()=> {
                       <td className="px-6 py-4 flex items-center gap-3">
                         <button 
                           onClick={() => setEditingTeam(team)}
-                          className="text-zinc-500 hover:text-blue-600 transition-colors bg-white hover:bg-zinc-100 p-1.5 rounded-md shadow-sm border border-zinc-200"
+                          className={`p-1.5 rounded-md shadow-sm border transition-colors ${
+                            isOwner
+                              ? "text-zinc-500 hover:text-blue-600 bg-white hover:bg-zinc-100 border-zinc-200"
+                              : "text-zinc-300 bg-zinc-100 border-zinc-100 cursor-not-allowed"
+                          }`}
                           title="Edit Team"
-                          disabled={team.ownerUserID !== localStorage.getItem("loggedInUserID")}
-                          hidden={team.ownerUserID !== localStorage.getItem("loggedInUserID")}
+                          disabled={!isOwner}
                         >
                           <Pencil className="w-4 h-4" />
                         </button>
                         <button 
                           onClick={() => { setSelectedTeamID(team.teamID); setIsAddMemberOpen(true); }}
-                          className="text-zinc-500 hover:text-green-600 transition-colors bg-white hover:bg-zinc-100 p-1.5 rounded-md shadow-sm border border-zinc-200"
+                          className={`p-1.5 rounded-md shadow-sm border transition-colors ${
+                            isOwner
+                              ? "text-zinc-500 hover:text-green-600 bg-white hover:bg-zinc-100 border-zinc-200"
+                              : "text-zinc-300 bg-zinc-100 border-zinc-100 cursor-not-allowed"
+                          }`}
                           title="Add Member"
-                          disabled={team.ownerUserID !== localStorage.getItem("loggedInUserID")}
-                          hidden={team.ownerUserID !== localStorage.getItem("loggedInUserID")}
+                          disabled={!isOwner}
                         >
                           <UserPlus className="w-4 h-4" />
                         </button>
                         <button 
                           onClick={() => handleDelete(team.teamID)}
-                          className="flex items-center gap-1 text-red-600 hover:text-white hover:bg-red-600 transition-colors bg-red-50 px-2 py-1.5 rounded-md text-xs font-semibold"
-                          disabled={team.ownerUserID !== localStorage.getItem("loggedInUserID")}
-                          hidden={team.ownerUserID !== localStorage.getItem("loggedInUserID")}
+                          className={`flex items-center gap-1 px-2 py-1.5 rounded-md text-xs font-semibold transition-colors ${
+                            isOwner
+                              ? "text-red-600 bg-red-50 hover:text-white hover:bg-red-600"
+                              : "text-zinc-300 bg-zinc-100 cursor-not-allowed"
+                          }`}
+                          disabled={!isOwner}
                         >
                           <Trash2 className="w-3.5 h-3.5" /> Delete
                         </button>
@@ -309,7 +318,7 @@ useEffect(()=> {
       <AddMemberModal 
         isOpen={isAddMemberOpen}
         onClose={() => setIsAddMemberOpen(false)}
-        teamID={selectedTeamID}
+        teamID={selectedTeamID || ""}
         onAdd={handleAddMember}
       />
 

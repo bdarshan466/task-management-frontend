@@ -26,21 +26,20 @@ export default function LoginForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
     const response = await AuthService.loginApi(formData.email, formData.password);
     console.log(response);
 
     // on success of the apicall nevigate to dashboard page
     if (response.success) {
+      // store the tokens in local storage
+      localStorage.setItem('accessToken', response.data.auth.accessToken);
+      localStorage.setItem('refreshToken', response.data.auth.refreshToken);
+      localStorage.setItem('loggedInUserName', response.data.user.name);
+      localStorage.setItem("loggedInUserID", response.data.user.userID);
       navigate('/dashboard');
     } else {
       setError(response.message || 'Something went wrong');
     }
-    // store the tokens in local storage
-    localStorage.setItem('accessToken', response.data.auth.accessToken);
-    localStorage.setItem('refreshToken', response.data.auth.refreshToken);
-    localStorage.setItem('loggedInUserName', response.data.user.name);
-    localStorage.setItem("loggedInUserID", response.data.user.userID);
   };
 
   return (
