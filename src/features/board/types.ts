@@ -3,7 +3,7 @@ export type TaskPriority = 'low' | 'medium' | 'high';
 export type TaskType = 'bug' | 'feature' | 'task';
 
 export interface Task {
-  id: string;
+  taskID: string;
   title: string;
   status: TaskStatus;
   priority: TaskPriority;
@@ -13,6 +13,7 @@ export interface Task {
     name: string;
     avatar?: string;
   };
+  taskUniqueCode?: string;
 }
 
 export interface Column {

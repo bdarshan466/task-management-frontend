@@ -71,8 +71,22 @@ useEffect(()=> {
     if (currentPage > 1) setCurrentPage(prev => prev - 1);
   };
 
-  const handleDelete = (id: string) => {
-    setTeamsData(prev => prev.filter(t => t.teamID !== id));
+  const handleDelete = async (teamID: string) => {
+    try {
+      const response = await TeamService.deleteTeamApi(teamID);
+
+      if(response.success === false){
+        setToastMessage({ text: response.message || "Failed to delete team", type: 'error' });
+        setTimeout(() => setToastMessage(null), 3000);
+        return;
+      }
+
+      setTeamsData(prev => prev.filter(t => t.teamID !== teamID));
+      setToastMessage({ text: response.message || "Team deleted successfully", type: 'success' });
+      setTimeout(() => setToastMessage(null), 3000);
+    } catch (error) {
+      console.error(error);
+    }
   };
 
   const handleUpdateTeam = async (teamID: string, newName: string) => {

@@ -1,8 +1,8 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { DragDropContext, type DropResult } from '@hello-pangea/dnd';
-import { initialBoardData } from '../data/mockData';
 import KanbanColumn from './KanbanColumn';
-import type { BoardData } from '../types';
+import type { BoardData, Column, Task, TaskPriority, TaskStatus, TaskType } from '../types';
+import TaskService from '@/services/taskApi';
 
 interface Props {
   selectedAssignee?: string | null;
@@ -11,7 +11,85 @@ interface Props {
 }
 
 export default function KanbanBoard({ selectedAssignee, selectedStatusFilter, selectedTeam }: Props) {
-  const [data, setData] = useState<BoardData>(initialBoardData);
+  const [data, setData] = useState<BoardData>({
+    tasks: {},
+    columns: {
+      'todo': { id: 'todo', title: 'TO DO', taskIds: [] },
+      'in-progress': { id: 'in-progress', title: 'IN PROGRESS', taskIds: [] },
+      'done': { id: 'done', title: 'DONE', taskIds: [] }
+    },
+    columnOrder: ['todo', 'in-progress', 'done']
+  });
+
+  useEffect(() => {
+    if (!selectedTeam) {
+      setData({
+        tasks: {},
+        columns: {
+          'todo': { id: 'todo', title: 'TO DO', taskIds: [] },
+          'in-progress': { id: 'in-progress', title: 'IN PROGRESS', taskIds: [] },
+          'done': { id: 'done', title: 'DONE', taskIds: [] }
+        },
+        columnOrder: ['todo', 'in-progress', 'done']
+      });
+      return;
+    }
+
+    const fetchTasks = async () => {
+      try {
+        const response = await TaskService.fetchTaskListApi(selectedTeam);
+        if (response) {
+          // response from fetchTaskListApi is response.data (an array of tasks)
+          const taskList = response;
+
+          // 1. Initialize fresh, empty columns
+          const newTasks: Record<string, Task> = {};
+          const newColumns: Record<TaskStatus, Column> = {
+            'todo': { id: 'todo', title: 'TO DO', taskIds: [] },
+            'in-progress': { id: 'in-progress', title: 'IN PROGRESS', taskIds: [] },
+            'done': { id: 'done', title: 'DONE', taskIds: [] }
+          };
+
+          // 2. Iterate through flat tasks and categorize them
+          taskList.forEach((t: any) => {
+            // Map API properties to frontend expected Task structure
+            const mappedTask: Task = {
+              taskID: t.taskID,
+              title: t.title,
+              status: t.status as TaskStatus,
+              priority: (t.priority || 'medium') as TaskPriority,
+              type: (t.type || 'task') as TaskType,
+              teamId: t.teamID,
+              assignee: t.primaryAssigned ? {
+                name: t.primaryAssigned.name,
+              } : undefined, 
+              taskUniqueCode: t.taskUniqueCode || '',
+            };
+
+            // Add task to the tasks map
+            newTasks[mappedTask.taskID] = mappedTask;
+
+            // Push task ID to its status column list
+            if (newColumns[mappedTask.status]) {
+              newColumns[mappedTask.status].taskIds.push(mappedTask.taskID);
+            }
+          });
+
+          // 3. Set the state
+          setData({
+            tasks: newTasks,
+            columns: newColumns,
+            columnOrder: ['todo', 'in-progress', 'done']
+          });
+        }
+      } catch (error) {
+        console.error('Error fetching tasks:', error);
+      }
+    };
+
+    fetchTasks();
+  }, [selectedTeam]);
+
 
   const onDragEnd = useCallback((result: DropResult) => {
     const { destination, source, draggableId } = result;
@@ -74,11 +152,12 @@ export default function KanbanBoard({ selectedAssignee, selectedStatusFilter, se
     }));
   }, [data]);
 
+
   return (
     <div className="h-full w-full overflow-x-auto pb-4">
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="flex gap-6 h-full items-start">
-          {data.columnOrder.map((columnId) => {
+          {!!data &&data.columnOrder.map((columnId) => {
             const column = data.columns[columnId];
             
             // Filter tasks based on assignee, status, and team

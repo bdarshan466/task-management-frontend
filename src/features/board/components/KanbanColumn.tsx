@@ -28,7 +28,7 @@ export default function KanbanColumn({ column, tasks }: Props) {
             }`}
           >
             {tasks.map((task, index) => (
-              <KanbanTaskCard key={task.id} task={task} index={index} />
+              <KanbanTaskCard key={task.taskID} task={task} index={index} />
             ))}
             {provided.placeholder}
           </div>

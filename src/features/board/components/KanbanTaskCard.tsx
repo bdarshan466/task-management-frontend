@@ -13,7 +13,7 @@ export default function KanbanTaskCard({ task, index }: Props) {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const handleCardClick = () => {
-    searchParams.set('selectedIssue', task.id);
+    searchParams.set('selectedIssue', task.taskID);
     setSearchParams(searchParams);
   };
 
@@ -33,8 +33,9 @@ export default function KanbanTaskCard({ task, index }: Props) {
     }
   };
 
+  console.log("task",task)
   return (
-    <Draggable draggableId={task.id} index={index}>
+    <Draggable draggableId={task.taskID} index={index}>
       {(provided, snapshot) => (
         <div
           ref={provided.innerRef}
@@ -57,7 +58,7 @@ export default function KanbanTaskCard({ task, index }: Props) {
                   <div className="flex items-center justify-center text-muted-foreground">
                     {getPriorityIcon()}
                   </div>
-                  <span className="text-[11px] font-semibold text-muted-foreground uppercase">{task.id}</span>
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase">{task.taskUniqueCode}</span>
                 </div>
                 
                 {task.assignee && (

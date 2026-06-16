@@ -1,8 +1,8 @@
-import React, { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { initialBoardData } from '@/features/board/data/mockData';
-import { Lock, Eye, Share2, MoreHorizontal, X, ChevronDown, Trash2 } from 'lucide-react';
+import { X, ChevronDown, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import type { Task, TaskStatus } from '@/features/board/types';
+import type { Task } from '@/features/board/types';
 
 interface Props {
   taskId: string | null;
@@ -65,7 +65,7 @@ export default function TaskModal({ taskId, onClose }: Props) {
         {/* Top Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 bg-zinc-50">
           <div className="flex items-center text-sm text-zinc-500 font-medium tracking-wide">
-            Add epic <span className="mx-2">/</span> <span className="text-blue-600">{task.id}</span>
+            Add epic <span className="mx-2">/</span> <span className="text-blue-600">{task.taskUniqueCode}</span>
           </div>
           
           <div className="flex items-center gap-2">

@@ -5,23 +5,49 @@ import { Button } from '@/components/ui/button';
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (name: string) => void;
+  onAdd: (name: string, codePrefix: string) => void;
 }
 
 export default function AddTeamModal({ isOpen, onClose, onAdd }: Props) {
   const [name, setName] = useState('');
+  const [codePrefix, setCodePrefix] = useState('');
+  const [error, setError] = useState('');
 
   if (!isOpen) return null;
 
   const handleCreate = () => {
-    if (name.trim()) {
-      onAdd(name.trim());
+    setError('');
+    
+    if (!name.trim()) {
+      setError('Team name is required');
+      return;
+    }
+
+    if (!codePrefix.trim()) {
+      setError('Code prefix is required');
+      return;
+    }
+
+    if (codePrefix.length < 2) {
+      setError('Code prefix must be at least 2 characters');
+      return;
+    }
+
+    if (!/^[A-Z]{2,4}$/.test(codePrefix)) {
+      setError('Code prefix must be 2-4 characters and contain only uppercase letters');
+      return;
+    }
+    if (name.trim() && codePrefix.trim()) {
+      onAdd(name.trim(), codePrefix.trim());
       setName('');
+      setCodePrefix('');
     }
   };
 
   const handleClose = () => {
     setName('');
+    setCodePrefix('');
+    setError('');
     onClose();
   };
 
@@ -38,20 +64,39 @@ export default function AddTeamModal({ isOpen, onClose, onAdd }: Props) {
           </button>
         </div>
         
-        <div className="p-8">
-          <label className="block text-sm font-semibold text-zinc-700 mb-2">Team Name</label>
-          <input 
-            autoFocus
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            className="w-full border border-zinc-300 rounded-md px-4 py-2.5 text-[15px] outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-colors text-zinc-900 font-medium"
-            placeholder="e.g. Graphic Design Team"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleCreate();
-              if (e.key === 'Escape') handleClose();
-            }}
-          />
+        <div className="p-8 space-y-6">
+          <div>
+            <label className="block text-sm font-semibold text-zinc-700 mb-2">
+              Team Name
+            </label>
+            <input
+              autoFocus
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full border border-zinc-300 rounded-md px-4 py-2.5 text-[15px] outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-colors text-zinc-900 font-medium"
+              placeholder="e.g. Graphic Design Team"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-semibold text-zinc-700 mb-2">
+              Code Prefix
+            </label>
+            <input
+              type="text"
+              value={codePrefix}
+              onChange={(e) => setCodePrefix(e.target.value)}
+              className="w-full border border-zinc-300 rounded-md px-4 py-2.5 text-[15px] outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-blue-500 transition-colors text-zinc-900 font-medium"
+              placeholder="e.g. GD"
+            />
+          </div>
+
+          {error && (
+            <p className="text-red-500 text-sm font-semibold mt-2 animate-pulse">
+              {error}
+            </p>
+          )}
         </div>
         
         <div className="px-6 py-4 bg-zinc-50 border-t border-zinc-100 flex justify-end gap-3">

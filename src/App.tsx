@@ -4,6 +4,7 @@ import SignupPage from './pages/auth/SignupPage';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import TeamsPage from './pages/dashboard/TeamsPage';
+import TeamMembersPage from './pages/dashboard/TeamMembersPage';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/dashboard/teams" element={<TeamsPage />} />
+        <Route path="/dashboard/team-mates" element={<TeamMembersPage />} />
       </Routes>
     </Router>
   );

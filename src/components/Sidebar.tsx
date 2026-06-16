@@ -1,4 +1,4 @@
-import { LayoutDashboard, CheckSquare, FolderGit2, Search, Settings, Plus, Users } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, Settings, Plus, Users } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
 
 export default function Sidebar() {
@@ -6,6 +6,7 @@ export default function Sidebar() {
     { icon: LayoutDashboard, label: 'Dashboards', path: '/dashboard' },
     { icon: CheckSquare, label: 'Your work', path: '/dashboard/work' },
     { icon: Users, label: 'Teams', path: '/dashboard/teams' },
+    { icon: Users, label: 'Team Members', path: '/dashboard/team-mates' }
   ];
 
   return (
@@ -38,10 +39,9 @@ export default function Sidebar() {
               to={item.path}
               end={item.path === '/dashboard'}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                  isActive
-                    ? 'bg-primary/10 text-primary'
-                    : 'text-muted-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800/50 hover:text-card-foreground'
+                `flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors ${isActive
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-muted-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800/50 hover:text-card-foreground'
                 }`
               }
             >
@@ -70,7 +70,7 @@ export default function Sidebar() {
 
       {/* Settings */}
       <div className="p-4 border-t border-border">
-         <button className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-colors">
+        <button className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-zinc-100 dark:hover:bg-zinc-800/50 transition-colors">
           <Settings className="w-4 h-4" />
           Project settings
         </button>

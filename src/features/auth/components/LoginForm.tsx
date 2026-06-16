@@ -27,7 +27,6 @@ export default function LoginForm() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const response = await AuthService.loginApi(formData.email, formData.password);
-    console.log(response);
 
     // on success of the apicall nevigate to dashboard page
     if (response.success) {
@@ -38,9 +37,18 @@ export default function LoginForm() {
       localStorage.setItem("loggedInUserID", response.data.user.userID);
       navigate('/dashboard');
     } else {
-      setError(response.message || 'Something went wrong');
+      handleError(response.message || 'Something went wrong');
     }
   };
+
+  const handleError = (message: string) => {
+  setError(message);
+
+  // Clear error after 5 seconds
+  setTimeout(() => {
+    setError(null);
+  }, 5000);
+};
 
   return (
     <Card className="border-none shadow-none md:border md:shadow-sm">

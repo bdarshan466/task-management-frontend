@@ -64,6 +64,15 @@ apiClient.interceptors.response.use(
         return Promise.reject(error);
       }
 
+      // // Do not redirect or attempt token refresh for auth endpoints (login, register, forgot-password)
+      // if (
+      //   originalRequest.url?.includes('/user/login') ||
+      //   originalRequest.url?.includes('/user/register') ||
+      //   originalRequest.url?.includes('/user/forgot-password')
+      // ) {
+      //   return Promise.reject(error);
+      // }
+
       if (isRefreshing) {
         // If we are already refreshing, place this request in the paused queue
         return new Promise(function (resolve, reject) {
@@ -110,10 +119,10 @@ apiClient.interceptors.response.use(
 
         // Resolve all queued queued requests
         processQueue(null, newAccessToken);
-        
+
         // Re-execute initial failed request
         return apiClient(originalRequest);
-        
+
       } catch (refreshError) {
         // Refresh token failed/expired
         processQueue(refreshError, null);
