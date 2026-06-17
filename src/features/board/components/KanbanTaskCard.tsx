@@ -1,16 +1,18 @@
 import { useSearchParams } from 'react-router-dom';
 import { Draggable } from '@hello-pangea/dnd';
-import type { Task } from '../types';
+import type { KanbanBoardTask } from '../types';
 import { AlertCircle, CheckSquare, Bookmark, ArrowDown, ArrowRight, ArrowUp } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 interface Props {
-  task: Task;
+  task: KanbanBoardTask;
   index: number;
 }
 
 export default function KanbanTaskCard({ task, index }: Props) {
   const [searchParams, setSearchParams] = useSearchParams();
+
+  console.log("task in card",task)
 
   const handleCardClick = () => {
     searchParams.set('selectedIssue', task.taskID);

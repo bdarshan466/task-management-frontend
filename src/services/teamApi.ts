@@ -64,4 +64,4 @@ const fetchTeamListApi = async () => {
 }
 
 
-export default { addTeamApi, updateTeamApi, addMemberApi, removeMemberApi, fetchTeamListApi };
+export default { addTeamApi, updateTeamApi, deleteTeamApi, addMemberApi, removeMemberApi, fetchTeamListApi };

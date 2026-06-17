@@ -16,5 +16,15 @@ const fetchTaskListApi = async (teamID: string, userIDs?: string[], statuses?: s
     }
 };
 
+const fetchTaskById = async (taskId: string) => {
+    try {
+        const response = await apiClient.get(`/task/${taskId}`);
+        return response.data;
+    } catch (error) {
+        console.error('Error fetching task by ID:', error);
+    }
+};
 
-export default { fetchTaskListApi };
+
+
+export default { fetchTaskListApi, fetchTaskById };

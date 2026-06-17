@@ -1,29 +1,83 @@
 import { useEffect, useState, useRef } from 'react';
-import { initialBoardData } from '@/features/board/data/mockData';
-import { X, ChevronDown, Trash2 } from 'lucide-react';
+import { X, ChevronDown, Trash2, AlertCircle, CheckSquare, Bookmark, ArrowDown, ArrowRight, ArrowUp } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import type { Task } from '@/features/board/types';
+import type { TaskModal } from '@/features/board/types';
+import TaskService from '@/services/taskApi';
 
 interface Props {
-  taskId: string | null;
+  taskId: string;
   onClose: () => void;
 }
 
-export default function TaskModal({ taskId, onClose }: Props) {
-  const [task, setTask] = useState<Task | null>(null);
+function convertMinutesToWords(totalMinutes: number) {
+  if (totalMinutes < 0) return "Invalid input";
+  if (totalMinutes === 0) return "0 minutes";
 
-  useEffect(() => {
-    if (taskId) {
-      setTask(initialBoardData.tasks[taskId] || null);
-      document.body.style.overflow = 'hidden';
-    } else {
-      setTask(null);
-      document.body.style.overflow = 'unset';
-    }
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  const hourText = hours > 0 ? `${hours} hour${hours > 1 ? 's' : ''}` : '';
+  const minuteText = minutes > 0 ? `${minutes} minute${minutes > 1 ? 's' : ''}` : '';
+
+  return [hourText, minuteText].filter(Boolean).join(' and ');
+}
+
+export default function TaskModal({ taskId, onClose }: Props) {
+  const [task, setTask] = useState<TaskModal | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(()=> {
+    const fetchTaskDetailById = async(taskId: string)=> {
+      try {
+        setIsLoading(true);
+        const response = await TaskService.fetchTaskById(taskId); 
+
+        if (response) {
+          // construct response data 
+          let data : TaskModal = {
+            taskID: response.taskID, 
+            taskUniqueCode: response.taskUniqueCode, 
+            title: response.title, 
+            description: response.description, 
+            priority: response.priority, 
+            type: response.type,
+            status: response.status, 
+            reporter: response.createdBy ? {
+              userID: response.createdBy.userID,
+              name: response.createdBy.name
+            } : { userID: '', name: 'Unreported' }, 
+            assignee: response.primaryAssigned ? {
+              userID: response.primaryAssigned.userID,
+              name: response.primaryAssigned.name
+            } : null, 
+            createdAt: response.createdAt, 
+            updatedAt: response.updatedAt, 
+            dueDate: response.dueDate, 
+            estimatedMinutes: response.estimatedMinutes,
+            actualTakenMinutes: response.actualTakenMinutes,
+            comments: response.comments,
+          }
+          setTask(data);
+        }
+      } catch (error) {
+        console.error("Error fetching task detail:", error)
+      } finally {
+        setIsLoading(false);
+      }
+    } 
+
+    fetchTaskDetailById(taskId).then(()=> {
+      if (taskId) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        setTask(null);
+        document.body.style.overflow = 'unset';
+      }
+    }); 
     return () => {
       document.body.style.overflow = 'unset';
-    };
-  }, [taskId]);
+    };  
+  }, [taskId])
 
   // Edits state
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -51,10 +105,63 @@ export default function TaskModal({ taskId, onClose }: Props) {
   useEffect(() => {
     if (task) {
       setTitleValue(task.title);
+      setDescValue(task.description || "Add a description...");
     }
   }, [task]);
 
-  if (!task) return null;
+  if (isLoading || !task) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 sm:p-6 lg:p-12 animate-in fade-in duration-200">
+        <div className="bg-white text-zinc-900 w-full max-w-6xl h-[90vh] rounded-xl shadow-2xl flex flex-col overflow-hidden border border-zinc-200 animate-pulse">
+          {/* Header Skeleton */}
+          <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-200 bg-zinc-50">
+            <div className="h-4 w-40 bg-zinc-200 rounded"></div>
+            <div className="h-8 w-8 bg-zinc-200 rounded-full"></div>
+          </div>
+          {/* Content Skeleton */}
+          <div className="flex flex-1 overflow-hidden bg-white">
+            <div className="flex-1 px-8 py-6 space-y-6">
+              <div className="h-8 w-3/4 bg-zinc-200 rounded"></div>
+              <div className="space-y-4">
+                <div className="h-4 w-24 bg-zinc-200 rounded"></div>
+                <div className="h-20 w-full bg-zinc-100 rounded"></div>
+              </div>
+              <div className="space-y-4">
+                <div className="h-4 w-24 bg-zinc-200 rounded"></div>
+                <div className="h-24 w-full bg-zinc-100 rounded"></div>
+              </div>
+            </div>
+            {/* Sidebar Skeleton */}
+            <div className="w-[360px] border-l border-zinc-200 p-6 space-y-6 bg-zinc-50/50">
+              <div className="h-8 w-32 bg-zinc-200 rounded"></div>
+              <div className="space-y-4 pt-4">
+                <div className="flex justify-between"><div className="h-4 w-16 bg-zinc-200 rounded"></div><div className="h-4 w-24 bg-zinc-200 rounded"></div></div>
+                <div className="flex justify-between"><div className="h-4 w-16 bg-zinc-200 rounded"></div><div className="h-4 w-24 bg-zinc-200 rounded"></div></div>
+                <div className="flex justify-between"><div className="h-4 w-16 bg-zinc-200 rounded"></div><div className="h-4 w-24 bg-zinc-200 rounded"></div></div>
+                <div className="flex justify-between"><div className="h-4 w-16 bg-zinc-200 rounded"></div><div className="h-4 w-24 bg-zinc-200 rounded"></div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const getPriorityIcon = () => {
+    switch (task.priority) {
+      case 'low': return <ArrowDown className="w-4 h-4 text-blue-500" />;
+      case 'medium': return <ArrowRight className="w-4 h-4 text-orange-500" />;
+      case 'high': return <ArrowUp className="w-4 h-4 text-red-500" />;
+    }
+  };
+
+  const getTypeIcon = () => {
+    switch (task.type) {
+      case 'bug': return <AlertCircle className="w-4 h-4 text-red-500" />;
+      case 'feature': return <Bookmark className="w-4 h-4 text-green-500" />;
+      case 'task': return <CheckSquare className="w-4 h-4 text-blue-400" />;
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4 sm:p-6 lg:p-12 animate-in fade-in duration-200" onClick={onClose}>
@@ -259,23 +366,49 @@ export default function TaskModal({ taskId, onClose }: Props) {
 
                 <div className="grid grid-cols-[100px_1fr] text-sm">
                   <span className="text-zinc-500 font-medium">Due date</span>
-                  <span className="text-zinc-900">None</span>
+                  <span className="text-zinc-900">{new Date(task.dueDate as string).toLocaleDateString('en-GB')}</span>
+                </div>
+
+                <div className="grid grid-cols-[100px_1fr] items-center text-sm">
+                  <span className="text-zinc-500 font-medium">Priority</span>
+                  <div className="flex items-center gap-2 text-zinc-900">
+                    {getPriorityIcon()}
+                    <span className="capitalize">{task.priority}</span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-[100px_1fr] items-center text-sm">
+                  <span className="text-zinc-500 font-medium">Type</span>
+                  <div className="flex items-center gap-2 text-zinc-900">
+                    {getTypeIcon()}
+                    <span className="capitalize">{task.type}</span>
+                  </div>
+                </div>
+
+                 <div className="grid grid-cols-[100px_1fr] text-sm">
+                  <span className="text-zinc-500 font-medium">Estimated Time</span>
+                  <span className="text-zinc-900">{convertMinutesToWords(task.estimatedMinutes)}</span>
+                </div>
+
+                 <div className="grid grid-cols-[100px_1fr] text-sm">
+                  <span className="text-zinc-500 font-medium">Actual Time</span>
+                  <span className="text-zinc-900">{convertMinutesToWords(task.actualTakenMinutes)}</span>
                 </div>
 
                 <div className="grid grid-cols-[100px_1fr] text-sm">
                   <span className="text-zinc-500 font-medium">Reporter</span>
                   <div className="flex items-center gap-2">
                     <div className="w-5 h-5 rounded-full bg-purple-600 flex items-center justify-center shadow-sm">
-                      <span className="text-white text-[9px] font-bold">D</span>
+                      <span className="text-white text-[9px] font-bold">{task.reporter.name.charAt(0)}</span>
                     </div>
-                    <span className="text-zinc-900">Darshan</span>
+                    <span className="text-zinc-900">{task.reporter.name}</span>
                   </div>
                 </div>
               </div>
             </div>
             
             <div className="text-xs text-zinc-500 mt-auto pt-8 flex justify-between px-1">
-              <span>Created 10 seconds ago</span>
+              <span>Created {new Date(task.createdAt).toLocaleString() || 'Unknown'}</span>
             </div>
             
           </div>

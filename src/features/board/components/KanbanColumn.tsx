@@ -1,10 +1,10 @@
 import { Droppable } from '@hello-pangea/dnd';
-import type { Column, Task } from '../types';
+import type { Column, KanbanBoardTask } from '../types';
 import KanbanTaskCard from './KanbanTaskCard';
 
 interface Props {
   column: Column;
-  tasks: Task[];
+  tasks: KanbanBoardTask[];
 }
 
 export default function KanbanColumn({ column, tasks }: Props) {

@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { DragDropContext, type DropResult } from '@hello-pangea/dnd';
 import KanbanColumn from './KanbanColumn';
-import type { BoardData, Column, Task, TaskPriority, TaskStatus, TaskType } from '../types';
+import type { KanbanBoardData, Column, KanbanBoardTask, TaskPriority, TaskStatus } from '../types';
 import TaskService from '@/services/taskApi';
 
 interface Props {
@@ -11,7 +11,7 @@ interface Props {
 }
 
 export default function KanbanBoard({ selectedAssignee, selectedStatusFilter, selectedTeam }: Props) {
-  const [data, setData] = useState<BoardData>({
+  const [data, setData] = useState<KanbanBoardData>({
     tasks: {},
     columns: {
       'todo': { id: 'todo', title: 'TO DO', taskIds: [] },
@@ -43,7 +43,7 @@ export default function KanbanBoard({ selectedAssignee, selectedStatusFilter, se
           const taskList = response;
 
           // 1. Initialize fresh, empty columns
-          const newTasks: Record<string, Task> = {};
+          const newTasks: Record<string, KanbanBoardTask> = {};
           const newColumns: Record<TaskStatus, Column> = {
             'todo': { id: 'todo', title: 'TO DO', taskIds: [] },
             'in-progress': { id: 'in-progress', title: 'IN PROGRESS', taskIds: [] },
@@ -53,17 +53,18 @@ export default function KanbanBoard({ selectedAssignee, selectedStatusFilter, se
           // 2. Iterate through flat tasks and categorize them
           taskList.forEach((t: any) => {
             // Map API properties to frontend expected Task structure
-            const mappedTask: Task = {
+            const mappedTask: KanbanBoardTask = {
               taskID: t.taskID,
               title: t.title,
+              description: t.description,
               status: t.status as TaskStatus,
-              priority: (t.priority || 'medium') as TaskPriority,
-              type: (t.type || 'task') as TaskType,
-              teamId: t.teamID,
+              teamID: t.teamID,
               assignee: t.primaryAssigned ? {
                 name: t.primaryAssigned.name,
               } : undefined, 
               taskUniqueCode: t.taskUniqueCode || '',
+              priority: t.priority as TaskPriority || 'medium',
+              type: t.type || 'feature',
             };
 
             // Add task to the tasks map
@@ -166,7 +167,7 @@ export default function KanbanBoard({ selectedAssignee, selectedStatusFilter, se
               .filter(task => {
                 const matchesAssignee = !selectedAssignee || task.assignee?.name === selectedAssignee;
                 const matchesStatus = !selectedStatusFilter || task.status === selectedStatusFilter;
-                const matchesTeam = !selectedTeam || task.teamId === selectedTeam;
+                const matchesTeam = !selectedTeam || task.teamID === selectedTeam;
                 return matchesAssignee && matchesStatus && matchesTeam;
               });
 

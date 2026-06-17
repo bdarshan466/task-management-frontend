@@ -19,9 +19,9 @@ export default function DashboardPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const selectedIssue = searchParams.get('selectedIssue');
   const [toastMessage, setToastMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
-  const [teamsData, setTeamsData] = useState<{teamID: string, name: string}[]>([]);
-  const [usersData, setUsersData] = useState<{userID: string, name: string, email: string, role: string}[]>([]);
-  const [isLoading, setIsLoading] = useState(null);
+  // const [teamsData, setTeamsData] = useState<{teamID: string, name: string}[]>([]);
+  // const [usersData, setUsersData] = useState<{userID: string, name: string, email: string, role: string}[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
 
   const location = useLocation();
@@ -85,6 +85,7 @@ export default function DashboardPage() {
     // fetch all users 
     const fetchAllUsers = async () => {
       try {
+        setIsLoading(true);
         const response = await UserService.fetchAllUsers();
         if (response.success) {
           const users = response.data.map((u: { userID: string, name: string, email: string, role: string }) => {
@@ -95,9 +96,11 @@ export default function DashboardPage() {
             }
           });
           setTeamMembers(users);
+          setIsLoading(false);
         }
       } catch (error) {
         console.error('Error fetching users:', error);
+        setIsLoading(false);
       }
     };
     fetchAllUsers();
@@ -263,8 +266,6 @@ export default function DashboardPage() {
             )}
           </>
         )}
-
-        
       </div>
 
       {/* Modal Overlay */}
