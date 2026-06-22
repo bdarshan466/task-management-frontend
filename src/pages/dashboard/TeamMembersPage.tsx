@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { ChevronDown, ChevronLeft, ChevronRight, Search, Users, Shield, User, UserMinus } from 'lucide-react';
 import { apiClient } from '@/lib/apiClient';
 import TeamService from '@/services/teamApi';
+import { useToast } from '@/context/ToastContext'; 
 
 interface Team {
   id: string;
@@ -38,6 +39,7 @@ export default function TeamMembersPage() {
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const loggedInUserID = localStorage.getItem("loggedInUserID");
+  const { showToast } = useToast();
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -68,11 +70,11 @@ export default function TeamMembersPage() {
   }, []);
 
   // Fetch members (either all users or team-specific members)
-  const fetchMembers = useCallback(async () => {
+  const fetchMembers = useCallback(async (signal?: AbortSignal) => {
     setIsLoading(true);
     try {
       if (selectedTeam) {
-        const response: any = await apiClient.get(`/team/member/${selectedTeam}`);
+        const response: any = await apiClient.get(`/team/member/${selectedTeam}`, {signal});
         if (response && response.success !== false) {
           const teamMembers = response.data?.teamMembers?.map((m: any) => ({
             userID: m.user?.userID || m.userID,
@@ -82,6 +84,8 @@ export default function TeamMembersPage() {
             teamRole: m.role || 'member',
           })) || [];
           setMembers(teamMembers);
+          console.log("team members",response);
+          showToast(response.message || 'Team members fetched successfully', 'success');
 
           // Find current logged-in user's role in the selected team
           const currentUserMember = response.data?.teamMembers?.find(
@@ -112,10 +116,11 @@ export default function TeamMembersPage() {
         }
         setCurrentUserTeamRole(null);
       }
-    } catch (error) {
+    } catch (error: any) {
+      // ignore axios cancel error
+      if (error.name === 'CanceledError' || error.message === 'canceled') return;
       console.error('Failed to fetch members:', error);
-      setToastMessage({ text: 'Failed to fetch team members', type: 'error' });
-      setTimeout(() => setToastMessage(null), 3000);
+      showToast('Failed to fetch team members', 'error');
       setMembers([]);
       setCurrentUserTeamRole(null);
     } finally {
@@ -128,8 +133,10 @@ export default function TeamMembersPage() {
   }, [fetchTeams]);
 
   useEffect(() => {
-    fetchMembers();
+    const abortController = new AbortController();
+    fetchMembers(abortController.signal);
     setCurrentPage(1); // Reset page on filter change
+    return () => abortController.abort();
   }, [fetchMembers]);
 
   // Handle local searching

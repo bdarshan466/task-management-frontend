@@ -1,4 +1,5 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useCallback, useEffect } from 'react';
+import type { Dispatch, SetStateAction } from 'react';
 import { DragDropContext, type DropResult } from '@hello-pangea/dnd';
 import KanbanColumn from './KanbanColumn';
 import type { KanbanBoardData, Column, KanbanBoardTask, TaskPriority, TaskStatus } from '../types';
@@ -8,18 +9,11 @@ interface Props {
   selectedAssignee?: string | null;
   selectedStatusFilter?: string | null;
   selectedTeam?: string | null;
+  data: KanbanBoardData;
+  setData: Dispatch<SetStateAction<KanbanBoardData>>;
 }
 
-export default function KanbanBoard({ selectedAssignee, selectedStatusFilter, selectedTeam }: Props) {
-  const [data, setData] = useState<KanbanBoardData>({
-    tasks: {},
-    columns: {
-      'todo': { id: 'todo', title: 'TO DO', taskIds: [] },
-      'in-progress': { id: 'in-progress', title: 'IN PROGRESS', taskIds: [] },
-      'done': { id: 'done', title: 'DONE', taskIds: [] }
-    },
-    columnOrder: ['todo', 'in-progress', 'done']
-  });
+export default function KanbanBoard({ selectedAssignee, selectedStatusFilter, selectedTeam, data, setData }: Props) {
 
   useEffect(() => {
     if (!selectedTeam) {

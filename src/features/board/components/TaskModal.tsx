@@ -1,12 +1,14 @@
 import { useEffect, useState, useRef } from 'react';
-import { X, ChevronDown, Trash2, AlertCircle, CheckSquare, Bookmark, ArrowDown, ArrowRight, ArrowUp } from 'lucide-react';
+import { X, ChevronDown, Trash2, AlertCircle, CheckSquare, Bookmark, ArrowDown, ArrowRight, ArrowUp, Play, Square, Timer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { TaskModal } from '@/features/board/types';
 import TaskService from '@/services/taskApi';
+import { useToast } from '@/context/ToastContext';
 
 interface Props {
   taskId: string;
   onClose: () => void;
+  onDeleteSuccess?: (taskId: string) => void;
 }
 
 function convertMinutesToWords(totalMinutes: number) {
@@ -22,9 +24,11 @@ function convertMinutesToWords(totalMinutes: number) {
   return [hourText, minuteText].filter(Boolean).join(' and ');
 }
 
-export default function TaskModal({ taskId, onClose }: Props) {
+export default function TaskModal({ taskId, onClose, onDeleteSuccess }: Props) {
+  const { showToast } = useToast();
   const [task, setTask] = useState<TaskModal | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(()=> {
     const fetchTaskDetailById = async(taskId: string)=> {
@@ -101,6 +105,37 @@ export default function TaskModal({ taskId, onClose }: Props) {
 
   const [isCommenting, setIsCommenting] = useState(false);
   const [commentValue, setCommentValue] = useState("");
+
+  // Live Timer tracking states
+  const [isTracking, setIsTracking] = useState(false);
+  const [secondsElapsed, setSecondsElapsed] = useState(0);
+  const [showTimeLogForm, setShowTimeLogForm] = useState(false);
+  const [timeLogDesc, setTimeLogDesc] = useState("");
+
+  useEffect(() => {
+    let interval: any = null;
+    if (isTracking) {
+      interval = setInterval(() => {
+        setSecondsElapsed(prev => prev + 1);
+      }, 1000);
+    } else {
+      if (interval) clearInterval(interval);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [isTracking]);
+
+  const formatStopwatchTime = (totalSeconds: number) => {
+    const hrs = Math.floor(totalSeconds / 3600);
+    const mins = Math.floor((totalSeconds % 3600) / 60);
+    const secs = totalSeconds % 60;
+    return [
+      hrs > 0 ? String(hrs).padStart(2, '0') : null,
+      String(mins).padStart(2, '0'),
+      String(secs).padStart(2, '0')
+    ].filter(Boolean).join(':');
+  };
 
   useEffect(() => {
     if (task) {
@@ -181,6 +216,18 @@ export default function TaskModal({ taskId, onClose }: Props) {
             </Button>
           </div>
         </div>
+
+        {/* {error && (
+          <div className="bg-red-50 border-b border-red-200 text-red-800 px-6 py-3 text-xs font-semibold flex items-center justify-between animate-in fade-in duration-200 shrink-0">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-red-650 shrink-0" />
+              <span>{error}</span>
+            </div>
+            <button onClick={() => setError(null)} className="text-red-500 hover:text-red-800 transition-colors p-1 rounded hover:bg-red-100">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )} */}
 
         {/* Content area */}
         <div className="flex flex-1 overflow-hidden bg-white">
@@ -281,54 +328,171 @@ export default function TaskModal({ taskId, onClose }: Props) {
           {/* Right Column (Sidebar Settings) */}
           <div className="w-[360px] border-l border-zinc-200 p-6 overflow-y-auto custom-scrollbar flex shrink-0 flex-col gap-6 bg-white">
             
-            {/* Status Dropdown */}
-            <div className="flex items-center gap-3 relative" ref={statusDropdownRef}>
-               <button 
-                 onClick={() => setIsStatusMenuOpen(!isStatusMenuOpen)}
-                 className={`flex items-center justify-between min-w-[140px] h-8 uppercase text-xs font-bold tracking-wider rounded px-3 outline-none cursor-pointer shadow-sm transition-colors ${
-                   task.status === 'in-progress' 
-                     ? 'bg-blue-600 hover:bg-blue-700 text-white border border-blue-700' 
-                     : task.status === 'done'
-                     ? 'bg-[#00875a] hover:bg-green-700 text-white border border-green-700'
-                     : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-800 border border-zinc-300'
-                 }`}
-               >
-                 <span>
-                    {task.status === 'todo' ? 'TO DO' : task.status === 'in-progress' ? 'IN PROGRESS' : 'DONE'}
-                 </span>
-                 <ChevronDown className="w-4 h-4 ml-2 opacity-70" />
-               </button>
+            {/* Status Dropdown & Action Controls */}
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center justify-between gap-2 w-full">
+                {/* Left Side: Status Dropdown */}
+                <div className="relative" ref={statusDropdownRef}>
+                   <button 
+                     onClick={() => setIsStatusMenuOpen(!isStatusMenuOpen)}
+                     className={`flex items-center justify-between min-w-[130px] h-8 uppercase text-xs font-bold tracking-wider rounded px-3 outline-none cursor-pointer shadow-sm transition-colors ${
+                       task.status === 'in-progress' 
+                         ? 'bg-blue-600 hover:bg-blue-700 text-white border border-blue-700' 
+                         : task.status === 'done'
+                         ? 'bg-[#00875a] hover:bg-green-700 text-white border border-green-700'
+                         : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-800 border border-zinc-300'
+                     }`}
+                   >
+                     <span>
+                        {task.status === 'todo' ? 'TO DO' : task.status === 'in-progress' ? 'IN PROGRESS' : 'DONE'}
+                     </span>
+                     <ChevronDown className="w-4 h-4 ml-2 opacity-70" />
+                   </button>
+ 
+                   {isStatusMenuOpen && (
+                     <div className="absolute top-full left-0 mt-1.5 w-52 bg-white border border-zinc-200 rounded-md shadow-lg z-50 p-1.5 flex flex-col gap-0.5 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                        <button 
+                           onClick={() => { setTask({...task, status: 'todo'}); setIsStatusMenuOpen(false); }}
+                           className="w-full text-left px-2 py-2 transition-colors hover:bg-zinc-100 rounded flex items-center"
+                        >
+                           <span className="inline-block bg-zinc-200 text-zinc-800 px-2 py-0.5 rounded-sm text-[11px] font-bold uppercase transition-shadow">To Do</span>
+                        </button>
+                        <button 
+                           onClick={() => { setTask({...task, status: 'in-progress'}); setIsStatusMenuOpen(false); }}
+                           className="w-full text-left px-2 py-2 transition-colors hover:bg-zinc-100 rounded flex items-center"
+                        >
+                           <span className="inline-block bg-blue-100 text-blue-850 px-2 py-0.5 rounded-sm text-[11px] font-bold uppercase transition-shadow text-center">In Progress</span>
+                        </button>
+                        <button 
+                           onClick={() => { setTask({...task, status: 'done'}); setIsStatusMenuOpen(false); }}
+                           className="w-full text-left px-2 py-2 transition-colors hover:bg-zinc-100 rounded flex items-center"
+                        >
+                           <span className="inline-block bg-green-100 text-green-850 px-2 py-0.5 rounded-sm text-[11px] font-bold uppercase transition-shadow text-center">Done</span>
+                        </button>
+                     </div>
+                   )}
+                </div>
 
-               <button
-                 className="p-1.5 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors border border-transparent hover:border-red-100"
-                 title="Delete task"
-                 onClick={() => alert("Task deletion functionality will be wired up to the backend soon!")}
-               >
-                 <Trash2 className="w-4 h-4" />
-               </button>
+                {/* Right Side: Timer & Delete buttons */}
+                <div className="flex items-center gap-2">
+                  {/* Live Work Log Timer UI */}
+                  {isTracking ? (
+                    <div className="flex items-center gap-1.5 bg-rose-50 border border-rose-200 text-rose-700 px-2.5 h-8 rounded-md text-xs font-semibold animate-in slide-in-from-right duration-200 shadow-sm">
+                      <span className="w-1.5 h-1.5 bg-rose-600 rounded-full animate-ping"></span>
+                      <span className="font-mono">{formatStopwatchTime(secondsElapsed)}</span>
+                      <button 
+                        onClick={() => {
+                          setIsTracking(false);
+                          setShowTimeLogForm(true);
+                        }} 
+                        className="ml-1 hover:bg-rose-200 p-0.5 rounded transition-colors"
+                        title="Stop Timer"
+                      >
+                        <Square className="w-3 h-3 fill-rose-700 stroke-rose-700 animate-in zoom-in-50 duration-200" />
+                      </button>
+                    </div>
+                  ) : (
+                    <Button 
+                      onClick={() => {
+                        setIsTracking(true);
+                        setSecondsElapsed(0);
+                        // Also auto transition to in-progress if currently to-do!
+                        if (task.status === 'todo') {
+                          setTask({ ...task, status: 'in-progress' });
+                        }
+                      }}
+                      className="border border-zinc-200 bg-white text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900 h-8 text-xs font-bold rounded-md px-3 flex items-center gap-1.5 transition-all shadow-sm"
+                    >
+                      <Play className="w-3.5 h-3.5 fill-zinc-500 stroke-none" />
+                      Start Work
+                    </Button>
+                  )}
 
-               {isStatusMenuOpen && (
-                 <div className="absolute top-full left-0 mt-1.5 w-52 bg-white border border-zinc-200 rounded-md shadow-lg z-50 p-1.5 flex flex-col gap-0.5 overflow-hidden animate-in fade-in zoom-in-95 duration-100">
+                  {/* Delete Task Button */}
+                  <button
+                    className="p-2 text-zinc-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors border border-zinc-200 hover:border-red-100 shadow-sm"
+                    title="Delete task"
+                    onClick={async () => {
+                      try {
+                        setError(null);
+                        const res = await TaskService.deleteTaskById(task.taskID) as any;
+                        if (res && res?.success) {
+                          const deletedId = task.taskID;
+                          setTask(null);
+                          showToast(res?.message || "Task deleted successfully!", "success");
+                          if (onDeleteSuccess) onDeleteSuccess(deletedId);
+                          onClose();
+                        } else {
+                          const errMsg = res?.message || "Failed to delete task.";
+                          setError(errMsg);
+                          showToast(errMsg, "error");
+                        }
+                      } catch (err: any) {
+                        const apiMessage = err.response?.data?.message || err.message || "An error occurred while deleting the task.";
+                        setError(apiMessage);
+                        showToast(apiMessage, "error");
+                      }
+                    }}
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              {/* Stopping Timer Time Log Dialogue */}
+              {showTimeLogForm && (
+                <div className="bg-zinc-50 border border-zinc-200 rounded-lg p-3 mt-1 space-y-2 animate-in slide-in-from-top duration-200">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs font-semibold text-zinc-755 flex items-center gap-1">
+                      <Timer className="w-3.5 h-3.5 text-zinc-500" /> Log Time: {formatStopwatchTime(secondsElapsed)}
+                    </span>
                     <button 
-                       onClick={() => { setTask({...task, status: 'todo'}); setIsStatusMenuOpen(false); }}
-                       className="w-full text-left px-2 py-2 transition-colors hover:bg-zinc-100 rounded flex items-center"
+                      onClick={() => { setShowTimeLogForm(false); setTimeLogDesc(""); }}
+                      className="text-zinc-400 hover:text-zinc-605"
                     >
-                       <span className="inline-block bg-zinc-200 text-zinc-800 px-2 py-0.5 rounded-sm text-[11px] font-bold uppercase transition-shadow">To Do</span>
+                      <X className="w-4 h-4" />
                     </button>
-                    <button 
-                       onClick={() => { setTask({...task, status: 'in-progress'}); setIsStatusMenuOpen(false); }}
-                       className="w-full text-left px-2 py-2 transition-colors hover:bg-zinc-100 rounded flex items-center"
+                  </div>
+                  <textarea
+                    className="w-full text-xs border border-zinc-300 rounded p-2 focus:ring-1 focus:ring-primary outline-none bg-white min-h-[50px] resize-none"
+                    placeholder="What did you work on? (e.g. fixed bugs, wrote tests)"
+                    value={timeLogDesc}
+                    onChange={(e) => setTimeLogDesc(e.target.value)}
+                  />
+                  <div className="flex justify-end gap-1.5">
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      className="text-xs h-7 text-zinc-500 hover:bg-zinc-200 px-2 font-semibold"
+                      onClick={() => {
+                        setShowTimeLogForm(false);
+                        setTimeLogDesc("");
+                      }}
                     >
-                       <span className="inline-block bg-[#0052cc] text-white px-2 py-0.5 rounded-sm text-[11px] font-bold uppercase transition-shadow">In Progress</span>
-                    </button>
-                    <button 
-                       onClick={() => { setTask({...task, status: 'done'}); setIsStatusMenuOpen(false); }}
-                       className="w-full text-left px-2 py-2 transition-colors hover:bg-zinc-100 rounded flex items-center"
+                      Discard
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      className="text-xs h-7 bg-primary text-primary-foreground hover:bg-primary/90 px-3 font-semibold"
+                      onClick={() => {
+                        const minutesToAdd = Math.max(1, Math.round(secondsElapsed / 60));
+                        setTask(prev => {
+                          if (!prev) return null;
+                          return {
+                            ...prev,
+                            actualTakenMinutes: (prev.actualTakenMinutes || 0) + minutesToAdd
+                          };
+                        });
+                        showToast(`Logged ${minutesToAdd} minute(s) successfully: "${timeLogDesc || 'No description'}"`, "success");
+                        setShowTimeLogForm(false);
+                        setTimeLogDesc("");
+                      }}
                     >
-                       <span className="inline-block bg-[#00875a] text-white px-2 py-0.5 rounded-sm text-[11px] font-bold uppercase transition-shadow">Done</span>
-                    </button>
-                 </div>
-               )}
+                      Submit Log
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Details Accordion */}

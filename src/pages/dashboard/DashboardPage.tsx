@@ -3,6 +3,7 @@ import { useSearchParams, useLocation } from 'react-router-dom';
 import DashboardLayout from '@/layouts/DashboardLayout';
 import KanbanBoard from '@/features/board/components/KanbanBoard';
 import TaskModal from '@/features/board/components/TaskModal';
+import type { KanbanBoardData } from '@/features/board/types';
 import { ChevronDown } from 'lucide-react';
 import TeamService from '@/services/teamApi';
 import UserService from '@/services/userApi';
@@ -22,6 +23,34 @@ export default function DashboardPage() {
   // const [teamsData, setTeamsData] = useState<{teamID: string, name: string}[]>([]);
   // const [usersData, setUsersData] = useState<{userID: string, name: string, email: string, role: string}[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  const [boardData, setBoardData] = useState<KanbanBoardData>({
+    tasks: {},
+    columns: {
+      'todo': { id: 'todo', title: 'TO DO', taskIds: [] },
+      'in-progress': { id: 'in-progress', title: 'IN PROGRESS', taskIds: [] },
+      'done': { id: 'done', title: 'DONE', taskIds: [] }
+    },
+    columnOrder: ['todo', 'in-progress', 'done']
+  });
+
+  const removeTaskFromState = (taskId: string) => {
+    setBoardData((prev) => {
+      const { [taskId]: _, ...remainingTasks } = prev.tasks;
+      const updatedColumns = { ...prev.columns };
+      Object.keys(updatedColumns).forEach((colId) => {
+        updatedColumns[colId] = {
+          ...updatedColumns[colId],
+          taskIds: updatedColumns[colId].taskIds.filter((id) => id !== taskId),
+        };
+      });
+      return {
+        ...prev,
+        tasks: remainingTasks,
+        columns: updatedColumns,
+      };
+    });
+  };
 
 
   const location = useLocation();
@@ -231,6 +260,8 @@ export default function DashboardPage() {
                   selectedAssignee={selectedAssignee}
                   selectedStatusFilter={selectedStatusFilter}
                   selectedTeam={selectedTeam}
+                  data={boardData}
+                  setData={setBoardData}
                 />
               </div>
 
@@ -270,7 +301,11 @@ export default function DashboardPage() {
 
       {/* Modal Overlay */}
       {selectedIssue && (
-        <TaskModal taskId={selectedIssue} onClose={closeTaskModal} />
+        <TaskModal
+          taskId={selectedIssue}
+          onClose={closeTaskModal}
+          onDeleteSuccess={removeTaskFromState}
+        />
       )}
     </DashboardLayout>
   );

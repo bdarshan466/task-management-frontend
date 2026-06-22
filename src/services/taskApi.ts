@@ -25,6 +25,15 @@ const fetchTaskById = async (taskId: string) => {
     }
 };
 
+const deleteTaskById = async (taskId: string)=> {
+    try {
+        const response = await apiClient.delete(`/task/${taskId}`);
+        return response;
+    } catch (error) {
+        console.error('Error deleting task by ID:', error);
+        throw error;
+    }
+}
 
 
-export default { fetchTaskListApi, fetchTaskById };
+export default { fetchTaskListApi, fetchTaskById, deleteTaskById };

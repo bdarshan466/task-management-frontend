@@ -5,20 +5,23 @@ import ForgotPasswordPage from './pages/auth/ForgotPasswordPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
 import TeamsPage from './pages/dashboard/TeamsPage';
 import TeamMembersPage from './pages/dashboard/TeamMembersPage';
+import { ToastProvider } from './context/ToastContext';
 
 function App() {
   return (
-    <Router>
-      <Routes>
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/dashboard" element={<DashboardPage />} />
-        <Route path="/dashboard/teams" element={<TeamsPage />} />
-        <Route path="/dashboard/team-mates" element={<TeamMembersPage />} />
-      </Routes>
-    </Router>
+    <ToastProvider>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/dashboard/teams" element={<TeamsPage />} />
+          <Route path="/dashboard/team-mates" element={<TeamMembersPage />} />
+        </Routes>
+      </Router>
+    </ToastProvider>
   );
 }
 

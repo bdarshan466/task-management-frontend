@@ -8,6 +8,7 @@ import AddTeamModal from '@/features/teams/components/AddTeamModal';
 import AddMemberModal from '@/features/teams/components/AddMemberModal';
 import { apiClient } from '@/lib/apiClient';
 import TeamService from '@/services/teamApi';
+import { useToast } from '@/context/ToastContext';
 
 export default function TeamsPage() {
   const [teamsData, setTeamsData] = useState<Team[]>([]);
@@ -27,18 +28,20 @@ export default function TeamsPage() {
   // Calculate index offset
   const startIndex = (currentPage - 1) * itemsPerPage;
   const currentTeams = teamsData.slice(startIndex, startIndex + itemsPerPage);
+  const {showToast} = useToast(); 
 
   // 1. Add pagination variables into the callback dependencies
-  const fetchTeams = useCallback(async () => {
+  const fetchTeams = useCallback(async (signal?: AbortSignal) => {
     try {
       setIsLoading(true);
       // Pass the state variables to the backend query
-      const response : any = await apiClient.get(`/team/all?page=${currentPage}&limit=${itemsPerPage}`);
+      const response : any = await apiClient.get(`/team/all?page=${currentPage}&limit=${itemsPerPage}`, {signal});
 
       if (response.success === false) {
-        setToastMessage({ text: response.message || "Failed to fetch teams", type: 'error' });
-        setTimeout(() => setToastMessage(null), 3000);
+        // setToastMessage({ text: response.message || "Failed to fetch teams", type: 'error' });
+        // setTimeout(() => setToastMessage(null), 3000);
         setTeamsData([]);
+        showToast(response.message || "Failed to fetch teams", 'error');
         return;
       }
       
@@ -50,17 +53,26 @@ export default function TeamsPage() {
         ownerUserID: team.createdBy?.userID
       }));
       setTeamsData(formattedTeams);
-      setToastMessage({ text: response.message || "Teams fetched successfully", type: 'success' });
-      setTimeout(() => setToastMessage(null), 3000);
+      // setToastMessage({ text: response.message || "Teams fetched successfully", type: 'success' });
+      // setTimeout(() => setToastMessage(null), 3000);
+      showToast(response.message || "Teams fetched successfully", 'success');
     } catch (error) {
+      // Ignore Axios cancel/abort errors
+    if (error.name === 'CanceledError' || error.message === 'canceled') return;
       console.error(error);
+
+      // setToastMessage({ text: "Failed to fetch teams", type: 'error' });
+      // setTimeout(() => setToastMessage(null), 3000);
+      showToast("Failed to fetch teams", 'error');
     } finally {
       setIsLoading(false);
     }
   }, [currentPage, itemsPerPage]); // <-- Recreate function ONLY when page/limit changes
 
 useEffect(()=> {
-  fetchTeams();
+  const controller = new AbortController();
+  fetchTeams(controller.signal);
+  return () => controller.abort();
 }, [fetchTeams])
 
   const handleNextPage = () => {
